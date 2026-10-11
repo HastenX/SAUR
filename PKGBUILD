@@ -12,7 +12,7 @@ sha256sum=("b2")
 
 package() {
     pacman -Qqm > "${pkgdir}/PKGLIST" 
-    mkdir -p ${pkgdir/usr/share}
+    mkdir -p "${pkgdir}/usr/share"
     cp "${pkgdir}/src/main" "${srcdir}/usr/share/saur" 
         
     chmod +x "${srcdir}/usr/share/saur"
