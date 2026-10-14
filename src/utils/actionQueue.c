@@ -1,37 +1,3 @@
-
-
-/*
-    Enum contains singular and
-plural processes. For example,
-'UPDATE' v. 'UPDATE_ALL'. If a
-value is singular, it applies
-to only specified packages.
-If it is plural, it applies
-to every package managed by
-SAUR. 
-*/
-typedef enum Action {
-    HELP,
-    VERSION,
-    QUIT,
-
-    QUERY,
-    SYNC,
-    DEPTEST,
-    
-    REMOVE,
-    REMOVE_ALL,
-    
-    UPGRADE,
-    UPGRADE_ALL,
-
-    SCAN,
-    SCAN_ALL,
-    
-    REMOVE_SAUR   
-
-} Action;
-
 typedef struct Node {
     Action action;
     struct Node* next;
@@ -48,31 +14,29 @@ Node* constructNode(Action action) {
     if node added doesn't have 
     an action already inside linked 
     list. 
-    -  Assumes QUIT is never 
-    intentionally added to a list.
     -  Will free a node if it has identical
     actions inside list.
  */
 void enqueue(Node* startNode, Node* node) {
-    if(startNode->action==QUIT) {
-        *startNode=*node;
-        startNode->next=constructNode(QUIT);
-
-        free(node);
-        return;
-    }
+    int nodePriority=getPriotity(node->action);
 
     Node* target=startNode;
     while(target!=node) {
+        int targetPriority=getPriotity(startNode->action);
         if(target->action==node->action ) {
             free(node);
             break;
         }
 
         // Last node is the node with QUIT Action
-        if(target->next->action==QUIT) {
-            node->next=target->next;
-            target->next=node;
+        if(targetPriority>nodePriority) {
+            Node tempNode=*startNode;
+
+            *startNode=*node;
+            *node=tempNode;
+
+            startNode->next=node;
+            break;
         } 
 
         target=target->next;
@@ -106,4 +70,92 @@ void freeQueue(Node* startNode) {
         free(target);
         target=nextTarget;
     }
+}
+
+bool hasAction(Node* startNode, Action action) {
+    bool hasAction=false;
+    Node* target=startNode;
+
+    while(!hasAction && target->action!=QUIT) {
+        hasAction=target->action==action;
+    }
+    return hasAction
+}
+
+void help();
+
+void version();
+
+void removeSaur();
+
+void scanPkg(char** pkgs);
+
+void scanAllPkg(char** pkgs);
+
+void syncPkg(char** pkgs);
+
+void queryPkg(char** pkgs);
+
+void deptestPkg(char** pkgs);
+
+void upgradePkg(char** pkgs);
+
+void upgradeAllPkg(char** pkgs);
+
+void removePkg(char** pkgs);
+
+void removeAllPkg(char** pkgs);
+
+void runActions(Node* startNode,char** pkgs) {
+    while(startNode->action!=QUIT) {
+        switch(dequeue(startNode)) {
+            case HELP:
+                help();
+                break;
+
+            case VERSION:
+                version();
+                break;
+
+            case QUERY:
+                queryPkg(pkgs);
+                break;
+
+            case DEPTEST:
+                deptestPkg(pkgs);
+                break;
+                
+            case SYNC:
+                syncPkg(pkgs);
+                break;
+
+            case REMOVE:
+                removePkg(pkgs);
+                break;
+
+            case REMOVE_ALL:
+                removeAllPkg(pkgs);
+                break;
+
+            case REMOVE_SAUR:
+                removeSaur();
+                break;
+
+            case UPGRADE:
+                upgradePkg(pkgs);
+                break;
+
+            case UPGRADE_ALL:
+                upgradeAllPkg(pkgs);
+                break;
+
+            case SCAN:
+                scanPkg(pkgs);
+                break;
+
+            case SCAN_ALL:
+                scanAllPkg(pkgs);
+                break;
+        }
+    }   
 }

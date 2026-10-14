@@ -1,6 +1,7 @@
+// STRING FOR RUNTIME ERRORS
+char* failedFlag;
 
-
-void editNodeVerbose(Node* startNode, const char* flag) {
+void addNodeLong(Node* startNode, const char* flag) {
     if(strcmp(flag,"--help")==0) {
         enqueue(startNode,constructNode(HELP));
         return;
@@ -53,15 +54,17 @@ void editNodeVerbose(Node* startNode, const char* flag) {
         enqueue(startNode,constructNode(REMOVE_SAUR));
         return;
     }
-  
-    printf(
-        "Error: '%s' is not defined as a flag!\n",
-        flag
-    );
-    enqueue(startNode,constructNode(HELP));
+
+    char* message=(char*)(malloc(sizeof(char)*(29+strlen(flag))));
+    strcat(message,"saur: unrecognized option '");
+    strcat(message,flag);
+    strcat(message,"'");
+
+    failedFlag=strdup(message);
+    free(message);
 } 
 
-void editNodeEmbeded(Node* startNode, const char flag) {
+void addNodeShort(Node* startNode, const char flag) {
     switch(flag) {
         case 'h':
             enqueue(startNode,constructNode(HELP));
@@ -70,9 +73,8 @@ void editNodeEmbeded(Node* startNode, const char flag) {
             enqueue(startNode,constructNode(QUERY));
             break;
         case 'S':
+            enqueue(startNode,constructNode(SYNC));
             enqueue(startNode,constructNode(SCAN));
-            enqueue(startNode,constructNode(SYNC));
-            enqueue(startNode,constructNode(SYNC));
             break;
         case 'T':
             enqueue(startNode,constructNode(DEPTEST));
@@ -85,30 +87,30 @@ void editNodeEmbeded(Node* startNode, const char flag) {
             enqueue(startNode,constructNode(VERSION));
             break;
         default:
-            printf(
-                "error: invalid option '%c'\n",
-                flag
-            );
-            enqueue(startNode,constructNode(HELP));
+            char* message=(char*)(malloc(sizeof(char)*26));
+            strcpy(message,"saur: invalid option '- '");
+            message[23]=flag;
+
+            failedFlag=strdup(message);
+            free(message);
             break;
     }
 }
 
-bool getOperations(const char* arg1) {
+
+int getOperations(const char* arg1) {
     int length=strlen(arg1);
 
     int operations=0;
-    for(int i=1; i<length;i++) {
-
-        int ascii=(int)arg1[i];
+    for(int i=1;i<length; i++) {
         operations+= 
-            ascii == (int)'h'
-            || ascii == (int)'Q'
-            || ascii == (int)'R'
-            || ascii == (int)'S'
-            || ascii == (int)'T'
-            || ascii == (int)'U'
-            || ascii == (int)'V' ? 
+            arg1[i] == 'h'
+            || arg1[i] == 'Q'
+            || arg1[i] == 'R'
+            || arg1[i] == 'S'
+            || arg1[i] == 'T'
+            || arg1[i] == 'U'
+            || arg1[i] == 'V' ? 
             1:0;
     }
 
@@ -117,34 +119,26 @@ bool getOperations(const char* arg1) {
 
 char* getErrors(int argc, const char* argv[]) {
     if(argc<2) {
-        return "error: no operation specified (use -h for help)";
+        return "saur: no operation specified (use -h for help)";
     }
 
     if(argv[1][0]!='-') {
-        return "error: no operation specified (use -h for help)";
-    }
-
-    int ascii=(int)(argv[1][1]);
-
-    // TODO: COMMENT IF STACK OVERFLOW
-    if(getOperations(argv[1])<1) {
-        char* str=(char*)(malloc(sizeof(char)*26));
-        strcat(str,"error: invalid option '-");
-        strcat(str,&argv[1][1]);
-        strcat(str,"'");
-
-        return str;
+        return "saur: no operation specified (use -h for help)";
     }
 
     if(argc>2) {
-        if(argv[2][0]=='-'
-            || getOperations(argv[1])>1) {
-            return "error: only one operation may be used at a time";
+        if(argv[2][0]=='-') {
+            return "saur: only one operation may be used at a time";
         }
+    }
+
+    if(getOperations(argv[1])>1) {
+        return "saur: only one operation may be used at a time";
     }
     
     return "NONE";
 }
+
 
 Node* genActionQueue(int argc, const char* argv[]) {
     Node* head=constructNode(QUIT);
@@ -160,13 +154,22 @@ Node* genActionQueue(int argc, const char* argv[]) {
         Action action;
         if(argv[1][1]!='-') {
             for(int i=1; i<strlen(argv[1]);i++) {
-                editNodeEmbeded(head,argv[1][i]);
-
+                addNodeShort(head,argv[1][i]);
+                if(failedFlag!=NULL) {
+                    break;
+                }
             }
         } else {
-            editNodeVerbose(head,argv[1]);
-
+            addNodeLong(head,argv[1]);
         }
+    }
+
+    if(failedFlag!=NULL) {
+        printf("%s\n",failedFlag);
+        free(failedFlag);
+
+        freeQueue(head);
+        head=constructNode(QUIT);
     }
 
     return head;
