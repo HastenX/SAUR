@@ -9,9 +9,9 @@ to every package managed by
 SAUR. 
 */
 typedef enum Action {
+    // ENUMS FOR OPERATIONS
     HELP,
     VERSION,
-    QUIT,
 
     QUERY,
     SYNC,
@@ -23,10 +23,42 @@ typedef enum Action {
     UPGRADE,
     UPGRADE_ALL,
 
+    REMOVE_SAUR, 
+
+    // ENUMS FOR MISC. OPERATIONS
     SCAN,
-    SCAN_ALL,
+    SCAN_ALL,  
+    QUIT,
+
+    // GENERIC ENUMS FOR OPERATION-OPTIONS:
+
+    // NOTE: FOR ENUM OPERATIONS TO WORK,
+    // ALL GENERIC VALUES MUST BE BETWEEN
+    // c AND y.
+    c,
+    d,
+    e,
+    g,
+    i,
+    k,
+    l,
+    m,
+    n,
+    o,
+    p,
+    q,
+    s,
+    t,
+    u,
+    w,
+    y,
+
+    // OPTIONS THAT WILL REPLACE GENERICS:
+    CHANGELOG,
+    CASCADE,
+    CLEAN
+
     
-    REMOVE_SAUR   
 
 } Action;
 
@@ -38,13 +70,29 @@ has the lowest prioritity.
 */
 int getPriotity(Action action) {
     switch(action) {
-        case HELP:
+        case SCAN:
             return 1;
-        case QUIT:
-            return 3;
+
+        case SCAN_ALL:
+            return 1;
+
+        case CHANGELOG:
+            return 1;
+
+        case CASCADE:
+            return 1;
+
+        case CLEAN:
+            return 1;
+
+        case HELP:
+            return 2;
 
         case VERSION:
-            return 1;
+            return 2;
+
+        case REMOVE_SAUR:
+            return 2;
 
         case QUERY:
             return 2;
@@ -55,25 +103,32 @@ int getPriotity(Action action) {
         case SYNC:
             return 2;
 
-        case REMOVE:
-            return 2;
-
-        case REMOVE_ALL:
-            return 2;
-
-        case REMOVE_SAUR:
-            return 1;
-
         case UPGRADE:
             return 2;
 
         case UPGRADE_ALL:
             return 2;
 
-        case SCAN:
-            return 1;
+        case REMOVE:
+            return 2;
 
-        case SCAN_ALL:
-            return 1;
+        case REMOVE_ALL:
+            return 2;
+
+        case QUIT:
+            return 4;
+        
+        // ENUM CASE:
+        default:
+            return 3;
+        
     }
+}
+
+bool isGeneric(Action action) {
+    return action>=c && action<=y;
+}
+
+bool isOperation(Action action) {
+    return action>=HELP && action<=REMOVE_SAUR;
 }

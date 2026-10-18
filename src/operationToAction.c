@@ -1,58 +1,56 @@
-// STRING FOR RUNTIME ERRORS
-char* failedFlag;
-
-void addNodeLong(Node* startNode, const char* flag) {
+char* addNodeLong(Node* startNode, const char* flag) {
+    char* failedFlag="NONE";
     if(strcmp(flag,"--help")==0) {
         enqueue(startNode,constructNode(HELP));
-        return;
+        return failedFlag;
     }
  
     if(strcmp(flag,"--sync")==0) {
         enqueue(startNode,constructNode(SCAN));
         enqueue(startNode,constructNode(SYNC));
-        return;
+        return failedFlag;
     }
  
     if(strcmp(flag,"--remove")==0) {
         enqueue(startNode,constructNode(REMOVE));
-        return;
+        return failedFlag;
     }
  
     if(strcmp(flag,"--uninstall-all")==0) {
         enqueue(startNode,constructNode(REMOVE_ALL));
-        return;
+        return failedFlag;
     }
  
     if(strcmp(flag,"--upgrade")==0) {
         enqueue(startNode,constructNode(SCAN));
         enqueue(startNode,constructNode(UPGRADE));
-        return;
+        return failedFlag;
     }
  
     if(strcmp(flag,"--update-all")==0) {
         enqueue(startNode,constructNode(SCAN));
         enqueue(startNode,constructNode(UPGRADE_ALL));
-        return;
+        return failedFlag;
     }
  
     if(strcmp(flag,"--force-update-all")==0) {
         enqueue(startNode,constructNode(UPGRADE_ALL));
-        return;
+        return failedFlag;
     }
  
     if(strcmp(flag,"--scan")==0) {
         enqueue(startNode,constructNode(SCAN));
-        return;
+        return failedFlag;
     }
 
     if(strcmp(flag,"--scan-all")==0) {
         enqueue(startNode,constructNode(SCAN_ALL));
-        return;
+        return failedFlag;
     }
  
     if(strcmp(flag,"--remove-saur")==0) {
         enqueue(startNode,constructNode(REMOVE_SAUR));
-        return;
+        return failedFlag;
     }
 
     char* message=(char*)(malloc(sizeof(char)*(29+strlen(flag))));
@@ -62,9 +60,12 @@ void addNodeLong(Node* startNode, const char* flag) {
 
     failedFlag=strdup(message);
     free(message);
+
+    return failedFlag;
 } 
 
-void addNodeShort(Node* startNode, const char flag) {
+char* addNodeShort(Node* startNode, const char flag) {
+    char* failedFlag="NONE";
     switch(flag) {
         case 'h':
             enqueue(startNode,constructNode(HELP));
@@ -76,6 +77,10 @@ void addNodeShort(Node* startNode, const char flag) {
             enqueue(startNode,constructNode(SYNC));
             enqueue(startNode,constructNode(SCAN));
             break;
+        case 'R':
+            enqueue(startNode,constructNode(SCAN));
+            enqueue(startNode,constructNode(REMOVE));
+            break;
         case 'T':
             enqueue(startNode,constructNode(DEPTEST));
             break;
@@ -86,6 +91,58 @@ void addNodeShort(Node* startNode, const char flag) {
         case 'V':
             enqueue(startNode,constructNode(VERSION));
             break;
+        // GENERIC CASES
+        case 'c':
+            enqueue(startNode,constructNode(c));
+            break;
+        case 'd':
+            enqueue(startNode,constructNode(d));
+            break;
+        case 'e':
+            enqueue(startNode,constructNode(e));
+            break;
+        case 'g':
+            enqueue(startNode,constructNode(g));
+            break;
+        case 'i':
+            enqueue(startNode,constructNode(i));
+            break;
+        case 'k':
+            enqueue(startNode,constructNode(k));
+            break;
+        case 'l':
+            enqueue(startNode,constructNode(l));
+            break;
+        case 'm':
+            enqueue(startNode,constructNode(m));
+            break;
+        case 'n':
+            enqueue(startNode,constructNode(n));
+            break;
+        case 'o':
+            enqueue(startNode,constructNode(o));
+            break;
+        case 'p':
+            enqueue(startNode,constructNode(p));
+            break;
+        case 'q':
+            enqueue(startNode,constructNode(q));
+            break;
+        case 's':
+            enqueue(startNode,constructNode(s));
+            break;
+        case 't':
+            enqueue(startNode,constructNode(t));
+            break;
+        case 'u':
+            enqueue(startNode,constructNode(u));
+            break;
+        case 'w':
+            enqueue(startNode,constructNode(w));
+            break;
+        case 'y':
+            enqueue(startNode,constructNode(y));
+            break;
         default:
             char* message=(char*)(malloc(sizeof(char)*26));
             strcpy(message,"saur: invalid option '- '");
@@ -95,6 +152,7 @@ void addNodeShort(Node* startNode, const char flag) {
             free(message);
             break;
     }
+    return failedFlag;
 }
 
 
@@ -151,26 +209,29 @@ Node* genActionQueue(int argc, const char* argv[]) {
     }
 
     if(argv[1][0]=='-') {
-        Action action;
         if(argv[1][1]!='-') {
             for(int i=1; i<strlen(argv[1]);i++) {
-                addNodeShort(head,argv[1][i]);
-                if(failedFlag!=NULL) {
+                message=addNodeShort(head,argv[1][i]);
+                if(message!=NULL) {
                     break;
                 }
             }
         } else {
-            addNodeLong(head,argv[1]);
+            message=addNodeLong(head,argv[1]);
         }
     }
 
-    if(failedFlag!=NULL) {
-        printf("%s\n",failedFlag);
-        free(failedFlag);
+    if(message!="NONE") {
+        printf("%s\n",message);
+        free(message);
 
         freeQueue(head);
         head=constructNode(QUIT);
     }
+
+    replaceGenericAction(
+        getOperationNode(head)
+    );
 
     return head;
 }
